@@ -1,30 +1,35 @@
-# Environment overrides use CSA__SECTION__KEY, for example CSA__STORES__POSTGRES_URL=...
+# Every key in this file is read by src/card_spend/config.py. A settings file that nothing reads
+# documents behaviour the code does not have, so anything that stopped being true was deleted rather
+# than left here to rot.
+#
+# Overrides, in precedence order:
+#   1. the specific variable, where one exists: CSA_POSTGRES_DSN, CSA_REDIS_URL, CSA_DUCKDB
+#   2. the generic CSA__SECTION__KEY, for any key at all, e.g. CSA__BENCHMARK__REPEATS=9
+#   3. the value below
+#
 # Nothing secret belongs in this file.
 
 paths:
+  # Defaults for `--data` and `--contracts`. Every command still takes them on the command line.
   data_dir: ./data
-  raw_subdir: raw
-  lake_subdir: lake
   contracts_dir: ./contracts
 
 generation:
   default_profile: dev
   seed: 20260916
-  # The processor upgrades its Avro schema two thirds of the way through the window so that any
-  # consumer reading the full history has to handle both versions in one pass.
+  # The processor upgrades its Avro schema this far through the window so that any consumer reading
+  # the full history has to handle both versions in one pass.
   v2_switch_fraction: 0.66
 
 stores:
-  # Relational serving layer. Narrow, indexed, latency sensitive. Overridable with CSA_POSTGRES_DSN.
+  # Relational serving layer. Narrow, indexed, latency sensitive.
   postgres_dsn: postgresql://postgres:postgres@127.0.0.1:5432/card_spend
-  # Columnar analytical layer over the Parquet lake. Embedded, so no server and no connection string.
-  duckdb_path: ./data/warehouse.duckdb
   # Key-value document store holding the nested customer document, for the single-key deep read.
-  # Overridable with CSA_REDIS_URL.
   redis_url: redis://127.0.0.1:6379/0
+  # The columnar layer reads the Parquet lake directly, so it has no connection string. The DuckDB
+  # warehouse that dbt writes follows `--data`, and CSA_DUCKDB overrides it for a single build.
 
 benchmark:
-  profile: bench
   repeats: 5
   warmup: 1
   # Wall-clock budgets in milliseconds, asserted by tests/performance at bench scale.
@@ -44,9 +49,3 @@ benchmark:
     q4_top_merchants_per_segment: 22000
     # duckdb over the lake, measured 8,566 ms
     q5_asof_fx_revaluation: 12000
-
-governance:
-  classification:
-    personal: [profile.first_name, profile.last_name, profile.email, profile.phone, address.line1, address.line2, address.postcode]
-    sensitive: [profile.date_of_birth]
-  mask_unless_role: data_admin

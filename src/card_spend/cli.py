@@ -10,14 +10,17 @@ import argparse
 import json
 from pathlib import Path
 
+from card_spend import config
 from card_spend.generate import spec
 from card_spend.generate.generator import generate
 
-DEFAULT_CONTRACTS = Path("contracts")
+# Defaults come from config/settings.yaml so that changing a value there changes what the CLI does.
+DEFAULT_DATA = Path(config.get_str("paths.data_dir", "./data"))
+DEFAULT_CONTRACTS = Path(config.get_str("paths.contracts_dir", "./contracts"))
 
 
 def _add_data_args(p: argparse.ArgumentParser) -> None:
-    p.add_argument("--data", type=Path, default=Path("data"), help="dataset root, holds raw/ and lake/")
+    p.add_argument("--data", type=Path, default=DEFAULT_DATA, help="dataset root, holds raw/ and lake/")
     p.add_argument("--contracts", type=Path, default=DEFAULT_CONTRACTS)
 
 
@@ -26,9 +29,11 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     gen = sub.add_parser("generate", help="Generate the synthetic raw feeds in their native formats")
-    gen.add_argument("--profile", choices=sorted(spec.PROFILES), default="dev")
-    gen.add_argument("--out", type=Path, default=Path("data"))
-    gen.add_argument("--seed", type=int, default=20260916)
+    gen.add_argument(
+        "--profile", choices=sorted(spec.PROFILES), default=config.get_str("generation.default_profile", "dev")
+    )
+    gen.add_argument("--out", type=Path, default=DEFAULT_DATA)
+    gen.add_argument("--seed", type=int, default=config.get_int("generation.seed", 20260916))
 
     sub.add_parser("profiles", help="List the scale profiles and their approximate sizes")
 
@@ -49,7 +54,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     bench = sub.add_parser("bench", help="Run the access-pattern benchmark across every reachable store")
     _add_data_args(bench)
-    bench.add_argument("--repeats", type=int, default=5)
+    bench.add_argument("--repeats", type=int, default=config.get_int("benchmark.repeats", 5))
     bench.add_argument("--out", type=Path, default=Path("docs/benchmarks/results.md"))
 
     report = sub.add_parser("report", help="Build the reports and the HTML dashboard")

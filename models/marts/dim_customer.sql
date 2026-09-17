@@ -25,8 +25,10 @@ select
     onboarded_on,
     city,
     country,
-    -- PII lives here, masked at the serving boundary rather than dropped, so an authorised reader
-    -- can still resolve a customer during an investigation.
+    -- PII lives here and is carried in clear. Keeping it on the dimension rather than dropping it
+    -- is what lets an authorised reader resolve a customer during an investigation; masking it for
+    -- everyone else needs a serving boundary this project does not build, and the README says so
+    -- under "deliberately out of scope" rather than implying a control that is not here.
     first_name,
     last_name,
     email,

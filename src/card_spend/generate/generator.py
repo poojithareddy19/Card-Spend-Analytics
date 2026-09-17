@@ -25,6 +25,7 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 
+from card_spend import config
 from card_spend.generate import spec, writers
 
 EPOCH = dt.date(1970, 1, 1)
@@ -85,7 +86,8 @@ class Generator:
         self.start_date = self.end_date - dt.timedelta(days=profile.days - 1)
         # The processor upgrades its feed two thirds of the way through the window, so any consumer
         # reading the full history has to handle both schema versions in one pass.
-        self.v2_switch = self.start_date + dt.timedelta(days=int(profile.days * 0.66))
+        switch_fraction = config.get_float("generation.v2_switch_fraction", 0.66)
+        self.v2_switch = self.start_date + dt.timedelta(days=int(profile.days * switch_fraction))
         self.manifest = Manifest(
             profile=profile.name,
             seed=seed,

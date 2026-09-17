@@ -25,6 +25,7 @@ from typing import Any
 
 import duckdb
 
+from card_spend import config
 from card_spend.duck import scalar
 from card_spend.stores.base import PATTERNS, UnsupportedPatternError
 from card_spend.stores.duck import DuckStore
@@ -68,7 +69,9 @@ def _percentile(values: list[float], pct: float) -> float:
     return ordered[idx]
 
 
-def _time_it(fn: Any, repeats: int, warmup: int = 1) -> tuple[list[float], int]:
+def _time_it(fn: Any, repeats: int, warmup: int | None = None) -> tuple[list[float], int]:
+    if warmup is None:
+        warmup = config.get_int("benchmark.warmup", 1)
     rows = 0
     for _ in range(warmup):
         rows = len(fn())
@@ -115,7 +118,11 @@ def _pick_params(data_dir: Path) -> dict[str, Any]:
     }
 
 
-def run_benchmark(data_dir: Path, repeats: int = 5, out_path: Path | None = None, dsn: str = DEFAULT_DSN) -> str:
+def run_benchmark(
+    data_dir: Path, repeats: int | None = None, out_path: Path | None = None, dsn: str = DEFAULT_DSN
+) -> str:
+    if repeats is None:
+        repeats = config.get_int("benchmark.repeats", 5)
     params = _pick_params(data_dir)
 
     duck = DuckStore(data_dir / "lake")

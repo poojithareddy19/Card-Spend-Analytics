@@ -12,11 +12,11 @@ the ingest step kept the original JSON alongside the flattened columns.
 from __future__ import annotations
 
 import json
-import os
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
+from card_spend import config
 from card_spend.stores.base import UnsupportedPatternError
 
 if TYPE_CHECKING:
@@ -29,7 +29,7 @@ else:  # pragma: no cover - import guard
     except ImportError:
         redis = None
 
-DEFAULT_URL = os.environ.get("CSA_REDIS_URL", "redis://127.0.0.1:6379/0")
+DEFAULT_URL = config.get_str("stores.redis_url", "redis://127.0.0.1:6379/0")
 KEY_PREFIX = "customer:"
 SUPPORTED = {"q1_customer_profile_lookup"}
 

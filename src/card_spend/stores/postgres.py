@@ -7,12 +7,12 @@ the benchmark exists partly to show where that stops being an advantage.
 
 from __future__ import annotations
 
-import os
 import re
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
+from card_spend import config
 from card_spend.stores.base import UnsupportedPatternError
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ else:  # pragma: no cover - import guard
     except ImportError:
         psycopg = None
 
-DEFAULT_DSN = os.environ.get("CSA_POSTGRES_DSN", "postgresql://postgres:postgres@127.0.0.1:5432/card_spend")
+DEFAULT_DSN = config.get_str("stores.postgres_dsn", "postgresql://postgres:postgres@127.0.0.1:5432/card_spend")
 
 SQL: dict[str, str] = {
     # The relational cost of a document: four tables reassembled with two aggregations. This is the
