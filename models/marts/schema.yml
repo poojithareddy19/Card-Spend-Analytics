@@ -1,0 +1,117 @@
+version: 2
+
+models:
+  - name: fct_card_transaction
+    description: >
+      One row per card transaction after de-duplication. Additive in amount_gbp_minor only;
+      amount_minor is additive within a single currency and meaningless summed across currencies.
+    columns:
+      - name: transaction_id
+        description: Degenerate dimension, unique across all time
+        tests: [unique, not_null]
+      - name: amount_gbp_minor
+        description: Fully additive. The one measure safe to sum anywhere
+        tests: [not_null]
+      - name: customer_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+      - name: account_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_account')
+                field: account_key
+      - name: merchant_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_merchant')
+                field: merchant_key
+      - name: card_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_card')
+                field: card_key
+      - name: txn_context_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_txn_context')
+                field: txn_context_key
+      - name: posted_date_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+      - name: fx_rate_to_gbp
+        description: Non-additive. Average weighted by amount or not at all
+        tests: [not_null]
+      - name: dq_score
+        description: Non-additive, 0 to 100. Range is asserted by dbt_tests/assert_dq_score_in_range.sql
+        tests: [not_null]
+
+  - name: dim_customer
+    description: SCD Type 2. Segment and KYC status are the watched columns
+    columns:
+      - name: customer_key
+        tests: [unique, not_null]
+      - name: customer_id
+        tests: [not_null]
+      - name: segment
+        description: "'unknown' is the UNKNOWN dimension member, not a real segment"
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['mass', 'student', 'affluent', 'premier', 'unknown']
+      - name: kyc_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['verified', 'pending', 'referred', 'rejected', 'unknown']
+
+  - name: dim_account
+    columns:
+      - name: account_key
+        tests: [unique, not_null]
+      - name: customer_id
+        tests: [not_null]
+
+  - name: dim_date
+    columns:
+      - name: date_key
+        tests: [unique, not_null]
+      - name: calendar_date
+        tests: [unique, not_null]
+
+  - name: dim_txn_context
+    columns:
+      - name: txn_context_key
+        tests: [unique, not_null]
+
+  - name: dim_merchant
+    columns:
+      - name: merchant_key
+        tests: [unique, not_null]
+
+  - name: dim_card
+    columns:
+      - name: card_key
+        tests: [unique, not_null]
+
+  - name: agg_customer_category_month
+    description: Pre-aggregate serving the app's hot path. One row per customer, month and category
+    columns:
+      - name: spend_gbp_minor
+        tests: [not_null]
+
+  - name: agg_dq_scorecard
+    description: Pass rate per defect code per day, reconcilable against the generator manifest
+    columns:
+      - name: pass_rate
+        tests: [not_null]

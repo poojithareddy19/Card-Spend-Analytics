@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: int_transactions_deduped
+    description: Exactly one row per transaction_id. This is where D02 is resolved
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+
+  - name: int_fx_rates_asof
+    description: Dense daily rate per currency, carrying the last known rate across missing days
+    columns:
+      - name: rate_to_gbp
+        tests: [not_null]
+
+  - name: int_transactions_scored
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+      - name: dq_score
+        tests: [not_null]
