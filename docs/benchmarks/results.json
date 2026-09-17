@@ -1,0 +1,215 @@
+{
+  "dataset": "/tmp/d3",
+  "transactions": 576674,
+  "customers": 5001,
+  "partitions": 90,
+  "machine": {
+    "python": "3.11.15",
+    "platform": "Linux-6.18.44-fc-v33-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "duckdb": "1.5.5"
+  },
+  "timings": [
+    {
+      "pattern": "q1_customer_profile_lookup",
+      "store": "redis",
+      "supported": true,
+      "rows": 1,
+      "p50_ms": 0.42,
+      "p95_ms": 0.62,
+      "mean_ms": 0.47,
+      "min_ms": 0.37,
+      "repeats": 5,
+      "note": ""
+    },
+    {
+      "pattern": "q1_customer_profile_lookup",
+      "store": "postgres",
+      "supported": true,
+      "rows": 1,
+      "p50_ms": 1.37,
+      "p95_ms": 1.48,
+      "mean_ms": 1.32,
+      "min_ms": 1.17,
+      "repeats": 5,
+      "note": ""
+    },
+    {
+      "pattern": "q1_customer_profile_lookup",
+      "store": "duckdb",
+      "supported": true,
+      "rows": 1,
+      "p50_ms": 2.61,
+      "p95_ms": 3.62,
+      "mean_ms": 2.76,
+      "min_ms": 2.33,
+      "repeats": 5,
+      "note": ""
+    },
+    {
+      "pattern": "q2_customer_12m_spend_by_category",
+      "store": "redis",
+      "supported": false,
+      "rows": 0,
+      "p50_ms": 0.0,
+      "p95_ms": 0.0,
+      "mean_ms": 0.0,
+      "min_ms": 0.0,
+      "repeats": 0,
+      "note": "not supported"
+    },
+    {
+      "pattern": "q2_customer_12m_spend_by_category",
+      "store": "postgres",
+      "supported": true,
+      "rows": 50,
+      "p50_ms": 0.72,
+      "p95_ms": 0.9,
+      "mean_ms": 0.74,
+      "min_ms": 0.61,
+      "repeats": 5,
+      "note": ""
+    },
+    {
+      "pattern": "q2_customer_12m_spend_by_category",
+      "store": "duckdb",
+      "supported": true,
+      "rows": 50,
+      "p50_ms": 87.98,
+      "p95_ms": 93.11,
+      "mean_ms": 89.35,
+      "min_ms": 85.57,
+      "repeats": 5,
+      "note": ""
+    },
+    {
+      "pattern": "q3_category_month_spend_all_customers",
+      "store": "redis",
+      "supported": false,
+      "rows": 0,
+      "p50_ms": 0.0,
+      "p95_ms": 0.0,
+      "mean_ms": 0.0,
+      "min_ms": 0.0,
+      "repeats": 0,
+      "note": "not supported"
+    },
+    {
+      "pattern": "q3_category_month_spend_all_customers",
+      "store": "postgres",
+      "supported": true,
+      "rows": 51,
+      "p50_ms": 359.95,
+      "p95_ms": 407.11,
+      "mean_ms": 367.37,
+      "min_ms": 349.96,
+      "repeats": 5,
+      "note": ""
+    },
+    {
+      "pattern": "q3_category_month_spend_all_customers",
+      "store": "duckdb",
+      "supported": true,
+      "rows": 51,
+      "p50_ms": 109.32,
+      "p95_ms": 112.02,
+      "mean_ms": 109.95,
+      "min_ms": 107.75,
+      "repeats": 5,
+      "note": ""
+    },
+    {
+      "pattern": "q4_top_merchants_per_segment",
+      "store": "redis",
+      "supported": false,
+      "rows": 0,
+      "p50_ms": 0.0,
+      "p95_ms": 0.0,
+      "mean_ms": 0.0,
+      "min_ms": 0.0,
+      "repeats": 0,
+      "note": "not supported"
+    },
+    {
+      "pattern": "q4_top_merchants_per_segment",
+      "store": "postgres",
+      "supported": true,
+      "rows": 80,
+      "p50_ms": 264.65,
+      "p95_ms": 278.64,
+      "mean_ms": 265.08,
+      "min_ms": 255.03,
+      "repeats": 5,
+      "note": ""
+    },
+    {
+      "pattern": "q4_top_merchants_per_segment",
+      "store": "duckdb",
+      "supported": true,
+      "rows": 80,
+      "p50_ms": 181.14,
+      "p95_ms": 214.31,
+      "mean_ms": 186.81,
+      "min_ms": 175.89,
+      "repeats": 5,
+      "note": ""
+    },
+    {
+      "pattern": "q5_asof_fx_revaluation",
+      "store": "redis",
+      "supported": false,
+      "rows": 0,
+      "p50_ms": 0.0,
+      "p95_ms": 0.0,
+      "mean_ms": 0.0,
+      "min_ms": 0.0,
+      "repeats": 0,
+      "note": "not supported"
+    },
+    {
+      "pattern": "q5_asof_fx_revaluation",
+      "store": "postgres",
+      "supported": true,
+      "rows": 5,
+      "p50_ms": 67.47,
+      "p95_ms": 69.23,
+      "mean_ms": 67.66,
+      "min_ms": 66.57,
+      "repeats": 5,
+      "note": ""
+    },
+    {
+      "pattern": "q5_asof_fx_revaluation",
+      "store": "duckdb",
+      "supported": true,
+      "rows": 5,
+      "p50_ms": 72.23,
+      "p95_ms": 73.45,
+      "mean_ms": 72.55,
+      "min_ms": 71.96,
+      "repeats": 5,
+      "note": ""
+    }
+  ],
+  "optimisations": [
+    {
+      "name": "Pre-aggregate vs the raw fact (Postgres, one customer, 12 months)",
+      "before_ms": 2.65,
+      "after_ms": 0.38,
+      "speedup": 6.9,
+      "why": "The aggregate collapses a customer's year of rows into one row per month and category. The index on (customer_id, month_key) then answers the question without touching the fact at all."
+    },
+    {
+      "name": "Partition pruning (DuckDB, one month out of the whole history)",
+      "before_ms": 26.86,
+      "after_ms": 10.78,
+      "speedup": 2.5,
+      "why": "The filter is on the partition key, so the engine opens 30 of 90 files. This is the single largest lever in the project and the reason the lake is partitioned by posting date rather than by anything else."
+    }
+  ],
+  "stores": {
+    "redis": "key-value document store",
+    "postgres": "relational serving marts",
+    "duckdb": "columnar over parquet lake"
+  }
+}
