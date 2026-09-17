@@ -15,6 +15,7 @@ import csv
 import re
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from card_spend.reports.build import build_reports, run_reports
@@ -74,6 +75,20 @@ def test_the_headline_matches_the_spend_report(built: dict[str, object]) -> None
     headline = frames["headline"].iloc[0]
     by_month = frames["spend_by_month"]["spend_gbp"].sum()
     assert headline["spend_gbp"] == pytest.approx(by_month, rel=1e-6)
+
+
+def test_re_running_the_reports_changes_nothing(built: dict[str, object]) -> None:
+    """`out/` is committed, so a number that drifts turns every build into a diff.
+
+    The FX revaluation sums a float product, and DuckDB is configured not to preserve insertion
+    order, so it aggregates in parallel and the last digits moved between runs: 12948.66487831 one
+    time, 12948.664878309997 the next. The money columns are rounded at the query to stop that, and
+    this is the test that notices if a new report reintroduces it.
+    """
+    first = run_reports(Path(str(built["root"])))
+    second = run_reports(Path(str(built["root"])))
+    for key in first:
+        pd.testing.assert_frame_equal(first[key], second[key], check_exact=True, obj=key)
 
 
 def test_the_build_report_counts_what_it_wrote(built: dict[str, object]) -> None:

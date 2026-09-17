@@ -47,7 +47,7 @@ src/card_spend/
   stores/           Postgres, DuckDB-over-Parquet, Redis: the same five patterns on each
   bench/            the benchmark harness
   reports/          nine reports and a self-contained HTML dashboard
-tests/              75 tests: unit, integration, detection quality, and plan-shape gates
+tests/              76 tests: unit, integration, detection quality, and plan-shape gates
 ```
 
 ---
@@ -260,7 +260,7 @@ make test        # everything, including dbt and the multi-store gates: ~2 minut
 make check       # ruff, ruff format, mypy --strict, then the full suite
 ```
 
-75 tests across four tiers, plus 78 dbt tests inside the build. mypy runs in strict mode, and
+76 tests across four tiers, plus 78 dbt tests inside the build. mypy runs in strict mode, and
 CI fails the build under 80% line and branch coverage; the suite currently sits at 91%.
 
 ## Deliberately out of scope

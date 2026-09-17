@@ -172,12 +172,19 @@ REPORTS: tuple[Report, ...] = (
                 from read_parquet('{{lake}}/marts/fx_rate.parquet')
             ) where rn = 1
         )
+        -- Rounded to pence, and not only because these are money figures on a report.
+        -- `booked_gbp` sums integer minor units and is exact, but the revaluation sums a float
+        -- product, and the engine is configured not to preserve insertion order so it aggregates in
+        -- parallel. The summation order therefore varies between runs and the last digits move:
+        -- 12948.66487831 one run, 12948.664878309997 the next. Nothing anyone reads changes, but the
+        -- published CSV in out/ shows up as modified after every build, which is noise a reviewer
+        -- has to stop and think about.
         select
             f.currency_key                                          as currency,
             count(*)                                                as txn_count,
-            sum(f.amount_gbp_minor) / 100.0                         as booked_gbp,
-            sum(f.amount_minor * l.rate_to_gbp) / 100.0             as revalued_gbp,
-            (sum(f.amount_minor * l.rate_to_gbp) - sum(f.amount_gbp_minor)) / 100.0 as unrealised_gbp
+            round(sum(f.amount_gbp_minor) / 100.0, 2)               as booked_gbp,
+            round(sum(f.amount_minor * l.rate_to_gbp) / 100.0, 2)   as revalued_gbp,
+            round((sum(f.amount_minor * l.rate_to_gbp) - sum(f.amount_gbp_minor)) / 100.0, 2) as unrealised_gbp
         from {FACT} f
         join {CTX} c on c.txn_context_key = f.txn_context_key
         join latest l on l.currency = f.currency_key
