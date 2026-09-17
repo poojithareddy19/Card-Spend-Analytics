@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "uk.retailbank.onboarding.customer",
+  "title": "Customer",
+  "description": "One onboarded customer as emitted by the onboarding platform. Producer: onboarding-platform. Owner: onboarding@example.com. Delivery window: T+1 by 03:00 Europe/London. Nested by design: profile, address and kyc are separate bounded contexts upstream.",
+  "type": "object",
+  "required": ["customer_id", "created_at", "segment", "profile", "address", "kyc"],
+  "additionalProperties": true,
+  "properties": {
+    "customer_id": { "type": "string", "pattern": "^CUS-[0-9]{9}$" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "segment": { "type": "string", "enum": ["mass", "affluent", "premier", "student"] },
+    "marketing_consent": { "type": "boolean" },
+    "profile": {
+      "type": "object",
+      "required": ["first_name", "last_name", "date_of_birth", "email"],
+      "properties": {
+        "first_name": { "type": "string", "x-classification": "personal" },
+        "last_name": { "type": "string", "x-classification": "personal" },
+        "date_of_birth": { "type": "string", "format": "date", "x-classification": "sensitive" },
+        "email": { "type": "string", "x-classification": "personal" },
+        "phone": { "type": ["string", "null"], "x-classification": "personal" }
+      }
+    },
+    "address": {
+      "type": "object",
+      "required": ["line1", "city", "postcode", "country"],
+      "properties": {
+        "line1": { "type": "string", "x-classification": "personal" },
+        "line2": { "type": ["string", "null"], "x-classification": "personal" },
+        "city": { "type": "string" },
+        "postcode": { "type": "string", "pattern": "^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$", "x-classification": "personal" },
+        "country": { "type": "string", "enum": ["GB"] }
+      }
+    },
+    "kyc": {
+      "type": "object",
+      "required": ["status", "risk_band"],
+      "properties": {
+        "status": { "type": "string", "enum": ["verified", "pending", "referred", "rejected"] },
+        "verified_at": { "type": ["string", "null"], "format": "date-time" },
+        "risk_band": { "type": "string", "enum": ["low", "medium", "high"] }
+      }
+    }
+  }
+}

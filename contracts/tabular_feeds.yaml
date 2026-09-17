@@ -1,0 +1,63 @@
+# Contracts for the feeds whose producers do not ship a machine schema of their own.
+# Each entry is the promise: the columns that must be present, their type, who owns the feed and
+# when it is due. Presence is validated, not nullability: a nullable column still owes a column.
+# Enforcement lands in src/card_spend/ingest/ on day 2; the generator writes to these shapes today.
+
+feeds:
+  accounts:
+    format: csv
+    producer: core-banking (legacy nightly extract)
+    owner: core-banking@example.com
+    delivery_window: "T+1 by 02:00 Europe/London"
+    primary_key: [account_id]
+    columns:
+      account_id:       { type: string, nullable: false, description: "Account identifier ACC-<10 digits>" }
+      customer_id:      { type: string, nullable: false, description: "FK to customers" }
+      product_code:     { type: string, nullable: false, description: "CURRENT | SAVER | STUDENT | PREMIER" }
+      currency:         { type: string, nullable: false, description: "ISO 4217 account currency" }
+      status:           { type: string, nullable: false, description: "open | dormant | closed" }
+      opened_date:      { type: date,   nullable: false }
+      closed_date:      { type: date,   nullable: true }
+      overdraft_limit_minor: { type: integer, nullable: false, description: "Arranged overdraft in minor units" }
+
+  cards:
+    format: csv
+    producer: core-banking (legacy nightly extract)
+    owner: cards-platform@example.com
+    delivery_window: "T+1 by 02:00 Europe/London"
+    primary_key: [card_id]
+    columns:
+      card_id:      { type: string, nullable: false, description: "Tokenised card identifier CRD-<12 hex>" }
+      account_id:   { type: string, nullable: false, description: "FK to accounts" }
+      card_type:    { type: string, nullable: false, description: "debit | credit" }
+      network:      { type: string, nullable: false, description: "visa | mastercard" }
+      issued_date:  { type: date,   nullable: false }
+      expiry_date:  { type: date,   nullable: false }
+      status:       { type: string, nullable: false, description: "active | blocked | expired | cancelled" }
+
+  merchants:
+    format: parquet
+    producer: merchant-enrichment-vendor (weekly full refresh)
+    owner: data-platform@example.com
+    delivery_window: "Monday by 06:00 Europe/London"
+    primary_key: [merchant_id]
+    columns:
+      merchant_id:        { type: string,  nullable: false }
+      merchant_name:      { type: string,  nullable: false }
+      mcc:                { type: integer, nullable: false, description: "ISO 18245 merchant category code" }
+      category:           { type: string,  nullable: false, description: "Vendor rollup of mcc" }
+      country:            { type: string,  nullable: false, description: "ISO 3166-1 alpha-2" }
+      is_online:          { type: boolean, nullable: false }
+      first_seen_date:    { type: date,    nullable: false }
+
+  fx_rates:
+    format: json
+    producer: treasury-rates-api
+    owner: treasury@example.com
+    delivery_window: "Daily by 01:00 Europe/London"
+    primary_key: [rate_date, currency]
+    columns:
+      rate_date:   { type: date,    nullable: false }
+      currency:    { type: string,  nullable: false, description: "ISO 4217, quoted against GBP" }
+      rate_to_gbp: { type: decimal, nullable: false, description: "GBP per one unit of currency" }
+      source:      { type: string,  nullable: false }

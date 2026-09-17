@@ -1,0 +1,23 @@
+{
+  "type": "record",
+  "name": "CardTransaction",
+  "namespace": "uk.retailbank.cards",
+  "doc": "v2 of the card processor feed. Backward compatible with v1: both added fields are nullable with a default, so a v1 reader skips them and a v2 reader can decode v1 bytes. tests/unit/test_schema_evolution.py asserts both directions.",
+  "fields": [
+    { "name": "transaction_id", "type": "string", "doc": "Processor-unique transaction identifier, TXN-<16 hex>" },
+    { "name": "card_id", "type": "string", "doc": "Tokenised card identifier, FK to cards" },
+    { "name": "account_id", "type": "string", "doc": "Funding account, FK to accounts" },
+    { "name": "merchant_id", "type": ["null", "string"], "default": null, "doc": "FK to merchants; null for ATM and internal transactions" },
+    { "name": "txn_timestamp", "type": { "type": "long", "logicalType": "timestamp-micros" }, "doc": "Instant the authorisation was requested, UTC" },
+    { "name": "posted_date", "type": { "type": "int", "logicalType": "date" }, "doc": "Date the transaction posted to the ledger" },
+    { "name": "amount_minor", "type": "long", "doc": "Signed amount in minor units of currency. Debit positive, refund negative" },
+    { "name": "currency", "type": "string", "doc": "ISO 4217 transaction currency" },
+    { "name": "mcc", "type": "int", "doc": "ISO 18245 merchant category code" },
+    { "name": "auth_code", "type": ["null", "string"], "default": null, "doc": "Six character authorisation code" },
+    { "name": "txn_type", "type": { "type": "enum", "name": "TxnType", "symbols": ["purchase", "refund", "atm_withdrawal", "fee"] } },
+    { "name": "channel", "type": { "type": "enum", "name": "Channel", "symbols": ["chip_and_pin", "contactless", "ecommerce", "atm", "mail_order"] } },
+    { "name": "status", "type": { "type": "enum", "name": "Status", "symbols": ["authorised", "settled", "reversed", "declined"] } },
+    { "name": "pos_entry_mode", "type": ["null", "string"], "default": null, "doc": "ADDED IN v2. ISO 8583 field 22 point-of-service entry mode" },
+    { "name": "is_recurring", "type": ["null", "boolean"], "default": null, "doc": "ADDED IN v2. True when the processor flagged a recurring mandate" }
+  ]
+}
