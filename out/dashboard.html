@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card spend and data quality</title>
+<style>
+:root { color-scheme: light dark; }
+.viz-root {
+  --surface-1: #fcfcfb; --plane: #f9f9f7;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --series-1: #2a78d6; --series-2: #eb6834;
+  --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    --surface-1: #1a1a19; --plane: #0d0d0d;
+    --text-primary: #ffffff; --text-secondary: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-2: #d95926;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  --surface-1: #1a1a19; --plane: #0d0d0d;
+  --text-primary: #ffffff; --text-secondary: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --series-1: #3987e5; --series-2: #d95926;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--plane); color: var(--text-primary);
+       font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.viz-root { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; }
+header h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+header p  { margin: 0; color: var(--text-secondary); }
+.meta { color: var(--muted); font-size: 13px; margin-top: 10px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 28px 0 8px; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.tile .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.tile .value { font-size: 26px; font-weight: 600; margin-top: 4px; letter-spacing: -0.02em; }
+.tile .sub   { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+        padding: 18px 18px 8px; margin-top: 20px; }
+.card h2 { font-size: 16px; margin: 0 0 2px; }
+.card .q { font-size: 13px; color: var(--text-secondary); margin: 0 0 2px; }
+.card .basis { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+.legend { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); margin: 0 0 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+svg { width: 100%; height: auto; display: block; overflow: visible; }
+.grid-line { stroke: var(--grid); stroke-width: 1; }
+.axis-line { stroke: var(--axis); stroke-width: 1; }
+.tick { fill: var(--muted); font-size: 11px; }
+.val  { fill: var(--text-secondary); font-size: 11px; font-variant-numeric: tabular-nums; }
+.hit  { fill: transparent; cursor: pointer; }
+details { margin: 10px 0 6px; }
+summary { cursor: pointer; font-size: 13px; color: var(--text-secondary); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+#tip { position: fixed; pointer-events: none; opacity: 0; transition: opacity .08s;
+       background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+       border-radius: 8px; padding: 6px 9px; font-size: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.14);
+       z-index: 10; max-width: 260px; }
+footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <header>
+    <h1>Card spend and data quality</h1>
+    <p>Card spend analytics</p>
+    <p class="meta">Generated 2026-09-17 16:15 from 539,373 settled transactions across 90 daily partitions. Average row quality score 99.8 out of 100.</p>
+  </header>
+  <div class="tiles"><div class="tile"><div class="label">Net spend</div><div class="value">£35,365,235</div><div class="sub">539,373 settled transactions</div></div><div class="tile"><div class="label">Active customers</div><div class="value">4,977</div><div class="sub">with at least one settled purchase</div></div><div class="tile"><div class="label">Average basket</div><div class="value">£65.57</div><div class="sub">spend divided by settled purchases</div></div><div class="tile"><div class="label">Online share</div><div class="value">43.6%</div><div class="sub">card-not-present as a share of spend</div></div></div>
+  <section class="card"><h2>Net spend by month</h2><p class="q">How is total card spend trending month on month</p><p class="basis">Date basis: posted date</p><svg viewBox="0 0 760 260" role="img" aria-label="Line chart">
+<line class="grid-line" x1="56" y1="16.0" x2="732" y2="16.0"/>
+<text class="tick" x="48" y="20.0" text-anchor="end">£15.0m</text>
+<line class="grid-line" x1="56" y1="68.5" x2="732" y2="68.5"/>
+<text class="tick" x="48" y="72.5" text-anchor="end">£11.2m</text>
+<line class="grid-line" x1="56" y1="121.0" x2="732" y2="121.0"/>
+<text class="tick" x="48" y="125.0" text-anchor="end">£7.5m</text>
+<line class="grid-line" x1="56" y1="173.5" x2="732" y2="173.5"/>
+<text class="tick" x="48" y="177.5" text-anchor="end">£3.8m</text>
+<line class="grid-line" x1="56" y1="226.0" x2="732" y2="226.0"/>
+<text class="tick" x="48" y="230.0" text-anchor="end">£0</text>
+<line class="axis-line" x1="56" y1="226" x2="732" y2="226"/>
+<text class="tick" x="56.0" y="244" text-anchor="middle">2026-04</text>
+<text class="tick" x="394.0" y="244" text-anchor="middle">2026-05</text>
+<text class="tick" x="732.0" y="244" text-anchor="middle">2026-06</text>
+<path d="M56.0,66.6 L394.0,52.8 L732.0,63.4" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="56.0" cy="66.6" r="3.5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+<circle class="hit" cx="56.0" cy="66.6" r="14" tabindex="0" data-tip="<b>2026-04</b><br>£11,383,154"/>
+<circle cx="394.0" cy="52.8" r="3.5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+<circle class="hit" cx="394.0" cy="52.8" r="14" tabindex="0" data-tip="<b>2026-05</b><br>£12,371,197"/>
+<circle cx="732.0" cy="63.4" r="3.5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+<circle class="hit" cx="732.0" cy="63.4" r="14" tabindex="0" data-tip="<b>2026-06</b><br>£11,610,883"/>
+<text class="val" x="732.0" y="51.4" text-anchor="end">£11.6m</text>
+</svg><details><summary>Table view</summary><table><thead><tr><th class="">Month</th><th class="num">Spend</th><th class="num">Transactions</th></tr></thead><tbody><tr><td class="">2026-04</td><td class="num">£11,383,154</td><td class="num">170,232</td></tr><tr><td class="">2026-05</td><td class="num">£12,371,197</td><td class="num">191,181</td></tr><tr><td class="">2026-06</td><td class="num">£11,610,883</td><td class="num">177,960</td></tr></tbody></table></details></section>
+<section class="card"><h2>Spend by merchant category</h2><p class="q">Where does the money go, by what the merchant sells</p><p class="basis">Date basis: posted date</p><svg viewBox="0 0 760 318" role="img" aria-label="Bar chart">
+<text class="tick" x="140" y="23.0" text-anchor="end">Groceries</text>
+<rect x="150" y="6" width="256.7" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="414.7" y="23.0">£4.8m</text>
+<rect class="hit" x="150" y="6" width="540" height="26" tabindex="0" data-tip="<b>Groceries</b><br>£4,753,022"/>
+<text class="tick" x="140" y="57.0" text-anchor="end">Travel agents</text>
+<rect x="150" y="40" width="242.3" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="400.3" y="57.0">£4.5m</text>
+<rect class="hit" x="150" y="40" width="540" height="26" tabindex="0" data-tip="<b>Travel agents</b><br>£4,486,962"/>
+<text class="tick" x="140" y="91.0" text-anchor="end">Electronics</text>
+<rect x="150" y="74" width="206.4" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="364.4" y="91.0">£3.8m</text>
+<rect class="hit" x="150" y="74" width="540" height="26" tabindex="0" data-tip="<b>Electronics</b><br>£3,822,435"/>
+<text class="tick" x="140" y="125.0" text-anchor="end">Hotels</text>
+<rect x="150" y="108" width="197.0" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="355.0" y="125.0">£3.6m</text>
+<rect class="hit" x="150" y="108" width="540" height="26" tabindex="0" data-tip="<b>Hotels</b><br>£3,647,598"/>
+<text class="tick" x="140" y="159.0" text-anchor="end">ATM, fees and unmatched</text>
+<rect x="150" y="142" width="184.2" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="342.2" y="159.0">£3.4m</text>
+<rect class="hit" x="150" y="142" width="540" height="26" tabindex="0" data-tip="<b>ATM, fees and unmatched</b><br>£3,410,689"/>
+<text class="tick" x="140" y="193.0" text-anchor="end">Fuel</text>
+<rect x="150" y="176" width="123.2" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="281.2" y="193.0">£2.3m</text>
+<rect class="hit" x="150" y="176" width="540" height="26" tabindex="0" data-tip="<b>Fuel</b><br>£2,282,039"/>
+<text class="tick" x="140" y="227.0" text-anchor="end">Utilities</text>
+<rect x="150" y="210" width="120.9" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="278.9" y="227.0">£2.2m</text>
+<rect class="hit" x="150" y="210" width="540" height="26" tabindex="0" data-tip="<b>Utilities</b><br>£2,239,011"/>
+<text class="tick" x="140" y="261.0" text-anchor="end">Eating out</text>
+<rect x="150" y="244" width="115.4" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="273.4" y="261.0">£2.1m</text>
+<rect class="hit" x="150" y="244" width="540" height="26" tabindex="0" data-tip="<b>Eating out</b><br>£2,136,795"/>
+<text class="tick" x="140" y="295.0" text-anchor="end">Other</text>
+<rect x="150" y="278" width="463.7" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="621.7" y="295.0">£8.6m</text>
+<rect class="hit" x="150" y="278" width="540" height="26" tabindex="0" data-tip="<b>Other</b><br>£8,586,683"/>
+</svg><details><summary>Table view</summary><table><thead><tr><th class="">Category</th><th class="num">Spend</th><th class="num">Transactions</th><th class="num">Average basket</th></tr></thead><tbody><tr><td class="">Groceries</td><td class="num">£4,753,022</td><td class="num">115,185</td><td class="num">£41.26</td></tr><tr><td class="">Travel agents</td><td class="num">£4,486,962</td><td class="num">8,165</td><td class="num">£549.54</td></tr><tr><td class="">Electronics</td><td class="num">£3,822,435</td><td class="num">13,121</td><td class="num">£291.32</td></tr><tr><td class="">Hotels</td><td class="num">£3,647,598</td><td class="num">12,247</td><td class="num">£297.84</td></tr><tr><td class="">ATM, fees and unmatched</td><td class="num">£3,410,689</td><td class="num">20,647</td><td class="num">£165.19</td></tr><tr><td class="">Fuel</td><td class="num">£2,282,039</td><td class="num">33,700</td><td class="num">£67.72</td></tr><tr><td class="">Utilities</td><td class="num">£2,239,011</td><td class="num">23,287</td><td class="num">£96.15</td></tr><tr><td class="">Eating out</td><td class="num">£2,136,795</td><td class="num">72,506</td><td class="num">£29.47</td></tr><tr><td class="">Clothing</td><td class="num">£1,956,533</td><td class="num">27,318</td><td class="num">£71.62</td></tr><tr><td class="">Jewellery</td><td class="num">£1,709,001</td><td class="num">3,811</td><td class="num">£448.44</td></tr><tr><td class="">Other retail</td><td class="num">£1,228,200</td><td class="num">29,023</td><td class="num">£42.32</td></tr><tr><td class="">Healthcare</td><td class="num">£1,127,003</td><td class="num">6,854</td><td class="num">£164.43</td></tr><tr><td class="">Fast food</td><td class="num">£787,877</td><td class="num">60,812</td><td class="num">£12.96</td></tr><tr><td class="">Digital services</td><td class="num">£482,888</td><td class="num">41,750</td><td class="num">£11.57</td></tr><tr><td class="">Transport</td><td class="num">£472,648</td><td class="num">45,533</td><td class="num">£10.38</td></tr><tr><td class="">Gambling</td><td class="num">£442,928</td><td class="num">5,410</td><td class="num">£81.87</td></tr><tr><td class="">Pharmacy</td><td class="num">£379,606</td><td class="num">20,004</td><td class="num">£18.98</td></tr></tbody></table></details></section>
+<section class="card"><h2>Card-present against online spend</h2><p class="q">How much of our spend is moving to card-not-present, and how fast</p><p class="basis">Date basis: posted date</p><div class="legend"><span><i class="swatch" style="background:var(--series-1)"></i>Card present</span><span><i class="swatch" style="background:var(--series-2)"></i>Online</span></div><svg viewBox="0 0 760 280" role="img" aria-label="Stacked bar chart">
+<line class="grid-line" x1="56" y1="16.0" x2="732" y2="16.0"/>
+<text class="tick" x="48" y="20.0" text-anchor="end">£15.0m</text>
+<line class="grid-line" x1="56" y1="69.5" x2="732" y2="69.5"/>
+<text class="tick" x="48" y="73.5" text-anchor="end">£11.2m</text>
+<line class="grid-line" x1="56" y1="123.0" x2="732" y2="123.0"/>
+<text class="tick" x="48" y="127.0" text-anchor="end">£7.5m</text>
+<line class="grid-line" x1="56" y1="176.5" x2="732" y2="176.5"/>
+<text class="tick" x="48" y="180.5" text-anchor="end">£3.8m</text>
+<line class="grid-line" x1="56" y1="230.0" x2="732" y2="230.0"/>
+<text class="tick" x="48" y="234.0" text-anchor="end">£0</text>
+<line class="axis-line" x1="56" y1="230" x2="732" y2="230"/>
+<rect x="149.7" y="139.4" width="38.0" height="90.6" rx="0" fill="var(--series-1)"/>
+<rect x="149.7" y="67.6" width="38.0" height="69.8" rx="4" fill="var(--series-2)"/>
+<rect class="hit" x="56.0" y="16" width="225.3" height="214" tabindex="0" data-tip="<b>2026-04</b><br>Card present: £6,352,682<br>Online: £5,030,472<br>online share 44.2%"/>
+<text class="tick" x="168.7" y="248" text-anchor="middle">2026-04</text>
+<rect x="375.0" y="128.9" width="38.0" height="101.1" rx="0" fill="var(--series-1)"/>
+<rect x="375.0" y="53.5" width="38.0" height="73.4" rx="4" fill="var(--series-2)"/>
+<rect class="hit" x="281.3" y="16" width="225.3" height="214" tabindex="0" data-tip="<b>2026-05</b><br>Card present: £7,084,384<br>Online: £5,286,813<br>online share 42.7%"/>
+<text class="tick" x="394.0" y="248" text-anchor="middle">2026-05</text>
+<rect x="600.3" y="137.3" width="38.0" height="92.7" rx="0" fill="var(--series-1)"/>
+<rect x="600.3" y="64.4" width="38.0" height="71.0" rx="4" fill="var(--series-2)"/>
+<rect class="hit" x="506.7" y="16" width="225.3" height="214" tabindex="0" data-tip="<b>2026-06</b><br>Card present: £6,496,843<br>Online: £5,114,040<br>online share 44.0%"/>
+<text class="tick" x="619.3" y="248" text-anchor="middle">2026-06</text>
+</svg><details><summary>Table view</summary><table><thead><tr><th class="">Month</th><th class="num">Card present</th><th class="num">Online</th><th class="num">Online share</th></tr></thead><tbody><tr><td class="">2026-04</td><td class="num">£6,352,682</td><td class="num">£5,030,472</td><td class="num">44.2%</td></tr><tr><td class="">2026-05</td><td class="num">£7,084,384</td><td class="num">£5,286,813</td><td class="num">42.7%</td></tr><tr><td class="">2026-06</td><td class="num">£6,496,843</td><td class="num">£5,114,040</td><td class="num">44.0%</td></tr></tbody></table></details></section>
+<section class="card"><h2>Data quality pass rate by dimension</h2><p class="q">Which quality dimension is costing us the most rows, and is it moving</p><p class="basis">Date basis: posted date</p><svg viewBox="0 0 760 230" role="img" aria-label="Pass rate chart">
+<line class="grid-line" x1="664.8" y1="0" x2="664.8" y2="208" stroke-dasharray="3 3"/>
+<text class="tick" x="664.8" y="222" text-anchor="middle">target 99%</text>
+<text class="tick" x="140" y="23.0" text-anchor="end">Timeliness</text>
+<rect x="150" y="6" width="516.9" height="26" rx="4" fill="var(--good)"/>
+<text class="val" x="680.0" y="23.0">99.402%</text>
+<rect class="hit" x="150" y="6" width="520" height="26" tabindex="0" data-tip="<b>Timeliness</b><br>99.402% pass rate<br>meets target"/>
+<text class="tick" x="140" y="57.0" text-anchor="end">Completeness</text>
+<rect x="150" y="40" width="518.0" height="26" rx="4" fill="var(--good)"/>
+<text class="val" x="680.0" y="57.0">99.621%</text>
+<rect class="hit" x="150" y="40" width="520" height="26" tabindex="0" data-tip="<b>Completeness</b><br>99.621% pass rate<br>meets target"/>
+<text class="tick" x="140" y="91.0" text-anchor="end">Consistency</text>
+<rect x="150" y="74" width="519.0" height="26" rx="4" fill="var(--good)"/>
+<text class="val" x="680.0" y="91.0">99.801%</text>
+<rect class="hit" x="150" y="74" width="520" height="26" tabindex="0" data-tip="<b>Consistency</b><br>99.801% pass rate<br>meets target"/>
+<text class="tick" x="140" y="125.0" text-anchor="end">Uniqueness</text>
+<rect x="150" y="108" width="519.2" height="26" rx="4" fill="var(--good)"/>
+<text class="val" x="680.0" y="125.0">99.852%</text>
+<rect class="hit" x="150" y="108" width="520" height="26" tabindex="0" data-tip="<b>Uniqueness</b><br>99.852% pass rate<br>meets target"/>
+<text class="tick" x="140" y="159.0" text-anchor="end">Validity</text>
+<rect x="150" y="142" width="519.5" height="26" rx="4" fill="var(--good)"/>
+<text class="val" x="680.0" y="159.0">99.913%</text>
+<rect class="hit" x="150" y="142" width="520" height="26" tabindex="0" data-tip="<b>Validity</b><br>99.913% pass rate<br>meets target"/>
+<text class="tick" x="140" y="193.0" text-anchor="end">Accuracy</text>
+<rect x="150" y="176" width="519.8" height="26" rx="4" fill="var(--good)"/>
+<text class="val" x="680.0" y="193.0">99.958%</text>
+<rect class="hit" x="150" y="176" width="520" height="26" tabindex="0" data-tip="<b>Accuracy</b><br>99.958% pass rate<br>meets target"/>
+</svg><details><summary>Table view</summary><table><thead><tr><th class="">Rule</th><th class="">Dimension</th><th class="num">Rows checked</th><th class="num">Rows failed</th><th class="num">Pass rate</th></tr></thead><tbody><tr><td class="">D06</td><td class="">Timeliness</td><td class="num">576,674</td><td class="num">3,448</td><td class="num">99.402%</td></tr><tr><td class="">D01</td><td class="">Completeness</td><td class="num">576,674</td><td class="num">2,188</td><td class="num">99.621%</td></tr><tr><td class="">D03</td><td class="">Consistency</td><td class="num">576,674</td><td class="num">1,148</td><td class="num">99.801%</td></tr><tr><td class="">D02</td><td class="">Uniqueness</td><td class="num">576,674</td><td class="num">851</td><td class="num">99.852%</td></tr><tr><td class="">D04</td><td class="">Validity</td><td class="num">576,674</td><td class="num">527</td><td class="num">99.909%</td></tr><tr><td class="">D05</td><td class="">Validity</td><td class="num">576,674</td><td class="num">479</td><td class="num">99.917%</td></tr><tr><td class="">D07</td><td class="">Accuracy</td><td class="num">576,674</td><td class="num">244</td><td class="num">99.958%</td></tr></tbody></table></details></section>
+<section class="card"><h2>Spend and basket by customer segment</h2><p class="q">Which segments carry the book, and how differently do they behave</p><p class="basis">Date basis: posted date</p><svg viewBox="0 0 760 148" role="img" aria-label="Bar chart">
+<text class="tick" x="140" y="23.0" text-anchor="end">Premier</text>
+<rect x="150" y="6" width="446.7" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="604.7" y="23.0">£41.4k</text>
+<rect class="hit" x="150" y="6" width="540" height="26" tabindex="0" data-tip="<b>Premier</b><br>238 customers<br>£41,357.29 per customer<br>£147.39 average basket"/>
+<text class="tick" x="140" y="57.0" text-anchor="end">Affluent</text>
+<rect x="150" y="40" width="140.9" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="298.9" y="57.0">£13.1k</text>
+<rect class="hit" x="150" y="40" width="540" height="26" tabindex="0" data-tip="<b>Affluent</b><br>931 customers<br>£13,050.61 per customer<br>£78.68 average basket"/>
+<text class="tick" x="140" y="91.0" text-anchor="end">Mass</text>
+<rect x="150" y="74" width="41.4" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="199.4" y="91.0">£3.8k</text>
+<rect class="hit" x="150" y="74" width="540" height="26" tabindex="0" data-tip="<b>Mass</b><br>3,136 customers<br>£3,835.26 per customer<br>£43.39 average basket"/>
+<text class="tick" x="140" y="125.0" text-anchor="end">Student</text>
+<rect x="150" y="108" width="11.9" height="26" rx="4" fill="var(--series-1)"/>
+<text class="val" x="169.9" y="125.0">£1.1k</text>
+<rect class="hit" x="150" y="108" width="540" height="26" tabindex="0" data-tip="<b>Student</b><br>671 customers<br>£1,102.54 per customer<br>£23.20 average basket"/>
+</svg><details><summary>Table view</summary><table><thead><tr><th class="">Segment</th><th class="num">Customers</th><th class="num">Spend</th><th class="num">Spend per customer</th><th class="num">Average basket</th></tr></thead><tbody><tr><td class="">Premier</td><td class="num">238</td><td class="num">£9,843,036</td><td class="num">£41,357.29</td><td class="num">£147.39</td></tr><tr><td class="">Affluent</td><td class="num">931</td><td class="num">£12,150,121</td><td class="num">£13,050.61</td><td class="num">£78.68</td></tr><tr><td class="">Mass</td><td class="num">3,136</td><td class="num">£12,027,379</td><td class="num">£3,835.26</td><td class="num">£43.39</td></tr><tr><td class="">Student</td><td class="num">671</td><td class="num">£739,806</td><td class="num">£1,102.54</td><td class="num">£23.20</td></tr></tbody></table></details></section>
+<section class="card"><h2>Treasury and operations</h2><p class="q">What is the foreign-currency exposure, and is the posting lag holding to its SLO</p><p class="basis">Date basis: posted date</p><details><summary>Foreign currency exposure</summary><table><thead><tr><th class="">Currency</th><th class="num">Transactions</th><th class="num">Booked</th><th class="num">Revalued at latest rate</th><th class="num">Unrealised</th></tr></thead><tbody><tr><td class="">JPY</td><td class="num">1,686</td><td class="num">£500</td><td class="num">£502</td><td class="num">£2</td></tr><tr><td class="">SEK</td><td class="num">2,784</td><td class="num">£12,887</td><td class="num">£12,949</td><td class="num">£61</td></tr><tr><td class="">AED</td><td class="num">2,162</td><td class="num">£28,983</td><td class="num">£29,116</td><td class="num">£133</td></tr><tr><td class="">USD</td><td class="num">14,372</td><td class="num">£739,984</td><td class="num">£743,609</td><td class="num">£3,625</td></tr><tr><td class="">EUR</td><td class="num">17,687</td><td class="num">£946,985</td><td class="num">£951,278</td><td class="num">£4,293</td></tr></tbody></table></details><details><summary>Posting lag against the two-day SLO</summary><table><thead><tr><th class="">Month</th><th class="num">Average lag (days)</th><th class="num">p95 lag</th><th class="num">Breaches over 2 days</th><th class="num">Breach rate</th></tr></thead><tbody><tr><td class="">2026-04</td><td class="num">0.56</td><td class="num">2.0</td><td class="num">1,120</td><td class="num">0.62%</td></tr><tr><td class="">2026-05</td><td class="num">0.57</td><td class="num">2.0</td><td class="num">1,210</td><td class="num">0.59%</td></tr><tr><td class="">2026-06</td><td class="num">0.56</td><td class="num">2.0</td><td class="num">1,118</td><td class="num">0.59%</td></tr></tbody></table></details></section>
+  <footer>Synthetic data. Every figure is reproducible from the seeded generator: <code>card-spend generate --profile dev</code>, then ingest, build and report. Definitions for every term used here are in <code>docs/model/03_glossary.md</code>.</footer>
+</div>
+<div id="tip" role="status"></div>
+<script>
+(function () {
+  var tip = document.getElementById('tip');
+  function show(e) {
+    var t = e.currentTarget.getAttribute('data-tip');
+    if (!t) return;
+    tip.innerHTML = t;
+    tip.style.opacity = 1;
+    move(e);
+  }
+  function move(e) {
+    var pad = 14;
+    var x = e.clientX + pad, y = e.clientY + pad;
+    var r = tip.getBoundingClientRect();
+    if (x + r.width > window.innerWidth) x = e.clientX - r.width - pad;
+    if (y + r.height > window.innerHeight) y = e.clientY - r.height - pad;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  }
+  function hide() { tip.style.opacity = 0; }
+  document.querySelectorAll('[data-tip]').forEach(function (el) {
+    el.addEventListener('mouseenter', show);
+    el.addEventListener('mousemove', move);
+    el.addEventListener('mouseleave', hide);
+    el.addEventListener('focus', show);
+    el.addEventListener('blur', hide);
+  });
+})();
+</script>
+</body>
+</html>
