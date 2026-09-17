@@ -1,12 +1,28 @@
-SHELL := /bin/bash
-PY ?= .venv/bin/python
+# A venv puts its interpreter in a different place on Windows, and `make setup` is the first thing
+# anyone runs. Getting that wrong makes the repo look broken before a single line of it has run.
+#
+# Native Windows make runs its recipes through cmd.exe, which rejects a forward-slash command path
+# outright: `.venv/Scripts/python` exits 9009, `.venv\Scripts\python` works. Running make from Git
+# Bash, MSYS2 or WSL still sets OS=Windows_NT but uses a POSIX shell, where the backslashes are
+# escapes instead. There is no single spelling that satisfies both, so pass the other one in:
+#
+#     make check PY=.venv/Scripts/python
+ifeq ($(OS),Windows_NT)
+  PY ?= .venv\Scripts\python.exe
+  BOOTSTRAP_PY ?= python
+else
+  SHELL := /bin/bash
+  PY ?= .venv/bin/python
+  BOOTSTRAP_PY ?= python3
+endif
+
 PROFILE ?= dev
 DATA ?= data
 
 .PHONY: setup profiles generate contracts ingest build load report bench all test test-fast lint typecheck check clean
 
 setup: ## create the venv and install everything
-	python3 -m venv .venv
+	$(BOOTSTRAP_PY) -m venv .venv
 	$(PY) -m pip install -q --upgrade pip
 	$(PY) -m pip install -q -e ".[dev,serve,docstore]"
 
@@ -46,15 +62,19 @@ test: ## everything, including the dbt builds
 test-fast: ## skip anything that shells out to dbt
 	$(PY) -m pytest tests -q -m "not slow and not bench"
 
+# Invoked as `python -m` rather than by binary name, so there is one spelling of the venv path in
+# this file rather than four.
 lint:
-	.venv/bin/ruff check src tests
-	.venv/bin/ruff format --check src tests
+	$(PY) -m ruff check src tests
+	$(PY) -m ruff format --check src tests
 
 typecheck:
-	.venv/bin/mypy
+	$(PY) -m mypy
 
 check: lint typecheck test ## everything CI runs
 
-clean:
-	rm -rf data data-bench out target logs .pytest_cache .mypy_cache .ruff_cache
-	find . -name __pycache__ -type d -prune -exec rm -rf {} +
+# Done in Python rather than with `rm -rf` and `find`, so one recipe works on both platforms. The
+# comment sits above the target rather than inside the recipe, because cmd.exe has no `#` comment
+# and would try to run the line.
+clean: ## remove every generated artefact
+	$(BOOTSTRAP_PY) -c "import shutil, pathlib; [shutil.rmtree(p, ignore_errors=True) for p in ['data','data-bench','out','target','logs','.pytest_cache','.mypy_cache','.ruff_cache']]; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('__pycache__')]"

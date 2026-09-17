@@ -25,6 +25,11 @@ make bench      # benchmark every access pattern across every reachable store
 those two services; everything else degrades gracefully and the results table records which stores
 were reachable.
 
+The Makefile runs on Windows as well as Linux and macOS. Native `make` there drives cmd.exe, which
+needs the backslash interpreter path the Makefile picks by default; if you run make from Git Bash,
+MSYS2 or WSL instead, pass the POSIX spelling: `make check PY=.venv/Scripts/python`. Every target is
+a one-line `card-spend` call, so the CLI is always available if you would rather skip make entirely.
+
 ## What is in here
 
 ```
@@ -42,7 +47,7 @@ src/card_spend/
   stores/           Postgres, DuckDB-over-Parquet, Redis: the same five patterns on each
   bench/            the benchmark harness
   reports/          nine reports and a self-contained HTML dashboard
-tests/              50 tests: unit, integration, detection quality, and plan-shape gates
+tests/              56 tests: unit, integration, detection quality, and plan-shape gates
 ```
 
 ---
@@ -241,6 +246,10 @@ The half of this role a `src/` directory never demonstrates. See
 | `dev` | 5,000 | 90 | ~577k | 8 s | 21 MB |
 | `bench` | 120,000 | 365 | ~50M | ~13 min | ~1.5 GB raw |
 
+Generate times are the reference machine, the same 2-core box the benchmark budgets are calibrated
+on. Expect roughly double on a laptop that is also running a container runtime: `dev` measured 15 s
+there. The row counts do not move, only the clock.
+
 Same seed, same output, byte for byte. `make bench-dataset` builds the benchmark dataset end to end.
 
 ## Testing
@@ -251,7 +260,7 @@ make test        # everything, including dbt and the multi-store gates: ~2 minut
 make check       # ruff, ruff format, mypy --strict, then the full suite
 ```
 
-50 tests across four tiers, plus 78 dbt tests inside the build. mypy runs in strict mode.
+56 tests across four tiers, plus 78 dbt tests inside the build. mypy runs in strict mode.
 
 ## Deliberately out of scope
 
@@ -261,6 +270,10 @@ Named here rather than silently omitted.
   row per transaction. The lifecycle needs two facts and a matching process.
 - **Balances, disputes and chargebacks.** Different grains, not variations on this one.
 - **Financial crime monitoring and regulatory returns.** Different domains.
+- **PII masking and role-based access.** `dim_customer` carries name, email and date of birth in
+  clear. Masking them needs a serving boundary that authenticates a reader and a role model to
+  authorise one, and neither exists here. The classification is a real piece of work and claiming it
+  in a config file without building it would be worse than leaving it out.
 - **Real-time.** This is a daily batch product.
 - **Cloud deployment.** The stores run locally so anyone who clones the repo can reproduce the
   benchmark. A managed warehouse would make the numbers unrepeatable.
