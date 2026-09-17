@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import fastavro
 import pandas as pd
@@ -23,9 +23,14 @@ AVRO_CODEC = "snappy"
 
 
 def load_avro_schema(path: Path) -> dict[str, Any]:
-    """Parse an .avsc file into the form fastavro wants."""
-    schema: dict[str, Any] = fastavro.parse_schema(json.loads(path.read_text(encoding="utf-8")))
-    return schema
+    """Parse an .avsc file into the form fastavro wants.
+
+    The casts here and in the readers below are all the same narrowing. fastavro is typed against
+    the whole Avro spec, where a schema may be a bare type name and a datum may be any of eleven
+    kinds. Every schema in `contracts/` is a record, so both are always a mapping, and fastavro
+    would have raised long before these returns if they were not.
+    """
+    return cast(dict[str, Any], fastavro.parse_schema(json.loads(path.read_text(encoding="utf-8"))))
 
 
 def write_avro(path: Path, schema: dict[str, Any], records: Iterable[dict[str, Any]]) -> int:
@@ -56,13 +61,13 @@ def write_avro(path: Path, schema: dict[str, Any], records: Iterable[dict[str, A
 def read_avro(path: Path) -> list[dict[str, Any]]:
     """Read an Avro container file back with the schema embedded in the file."""
     with path.open("rb") as fh:
-        return list(fastavro.reader(fh))
+        return cast(list[dict[str, Any]], list(fastavro.reader(fh)))
 
 
 def read_avro_as(path: Path, reader_schema: dict[str, Any]) -> list[dict[str, Any]]:
     """Read with an explicit reader schema, which is how schema evolution is actually exercised."""
     with path.open("rb") as fh:
-        return list(fastavro.reader(fh, reader_schema=reader_schema))
+        return cast(list[dict[str, Any]], list(fastavro.reader(fh, reader_schema=reader_schema)))
 
 
 def write_jsonl(path: Path, records: Iterable[dict[str, Any]]) -> int:

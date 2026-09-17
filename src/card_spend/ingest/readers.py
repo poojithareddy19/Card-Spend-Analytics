@@ -10,7 +10,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import fastavro
 import pandas as pd
@@ -41,8 +41,10 @@ def observe_avro(path: Path) -> set[str]:
     """Read only the container header, which carries the writer schema, not the records."""
     with path.open("rb") as fh:
         reader = fastavro.reader(fh)
-        schema = reader.writer_schema
-    return {f["name"] for f in schema["fields"]}
+        # A writer schema is any Avro schema as far as fastavro's types go; a container written
+        # from contracts/ always carries a record, which is the only form with a "fields" list.
+        schema = cast(dict[str, Any], reader.writer_schema)
+    return {str(f["name"]) for f in schema["fields"]}
 
 
 def observe_json_array(path: Path) -> set[str]:
