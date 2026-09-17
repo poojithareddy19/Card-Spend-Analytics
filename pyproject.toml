@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Card spend analytics: domain model, multi-store query benchmarks and a reporting layer"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 dependencies = [
     "pandas>=2.2",
     "numpy>=1.26",

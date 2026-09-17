@@ -273,4 +273,4 @@ patterns, applied to a different domain and a different question.
 
 ## Licence
 
-MIT.
+Apache 2.0. See [`LICENSE`](LICENSE).
