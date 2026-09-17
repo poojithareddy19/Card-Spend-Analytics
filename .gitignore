@@ -1,0 +1,19 @@
+.venv/
+data/
+data-bench/
+*.duckdb
+*.duckdb.wal
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.DS_Store
+target/
+logs/
+dbt_logs/
+
+# sandbox scratch
+.user.yml
