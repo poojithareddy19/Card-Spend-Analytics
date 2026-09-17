@@ -1,0 +1,20 @@
+select
+    customer_id,
+    cast(created_at as timestamp)   as onboarded_at,
+    cast(created_at as date)        as onboarded_on,
+    segment,
+    marketing_consent,
+    first_name,
+    last_name,
+    date_of_birth,
+    email,
+    phone,
+    address_line1,
+    city,
+    postcode,
+    country,
+    kyc_status,
+    cast(kyc_verified_at as timestamp) as kyc_verified_at,
+    kyc_risk_band,
+    document
+from read_parquet('{{ var("lake_path") }}/customers/customers.parquet')

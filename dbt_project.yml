@@ -1,0 +1,31 @@
+name: card_spend
+version: "1.0.0"
+config-version: 2
+profile: card_spend
+
+model-paths: ["models"]
+snapshot-paths: ["snapshots"]
+# Not "tests": that is the pytest suite. dbt singular tests live in their own folder.
+test-paths: ["dbt_tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Set by `card-spend build`, which points dbt at whichever dataset you generated.
+  lake_path: "data/lake"
+
+models:
+  card_spend:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
+
+snapshots:
+  card_spend:
+    +target_schema: snapshots

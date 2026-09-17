@@ -1,0 +1,24 @@
+# Kept in the repo rather than ~/.dbt so `card-spend build` works on a fresh clone with no setup.
+# DuckDB is embedded, so there is no server, no port and nothing secret in here.
+card_spend:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('CSA_DUCKDB', 'data/warehouse.duckdb') }}"
+      threads: 4
+      settings:
+        # DuckDB defaults to 80% of RAM. On the benchmark profile the de-duplication window over
+        # 50M rows needs more working memory than that leaves, and the process is killed by the OOM
+        # killer with no error message at all, which is a memorable afternoon. A lower ceiling makes
+        # DuckDB spill to its temp directory instead, which is slower and finishes.
+        #
+        # The temp directory itself is deliberately NOT set here: DuckDB has already opened its
+        # default (`<database file>.tmp`, which is beside the dataset anyway) by the time dbt applies
+        # profile settings, and setting it at that point fails with "cannot switch temporary
+        # directory after the current one has been used".
+        memory_limit: "{{ env_var('CSA_DUCKDB_MEMORY', '3GB') }}"
+        max_temp_directory_size: "{{ env_var('CSA_DUCKDB_TEMP_SIZE', '40GB') }}"
+        # Row order carries no meaning in any of these models, and not preserving it lets DuckDB
+        # write large results in parallel with a far smaller memory ceiling.
+        preserve_insertion_order: false

@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: stg_card_transactions
+    description: The fact feed off the partitioned lake. Still carries duplicates by design
+    columns:
+      - name: transaction_id
+        tests: [not_null]
+      - name: currency
+        tests: [not_null]
+      - name: feed_version
+        tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2]
+                quote: false
+
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+
+  - name: stg_accounts
+    columns:
+      - name: account_id
+        tests: [unique, not_null]
+      - name: customer_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+
+  - name: stg_cards
+    columns:
+      - name: card_id
+        tests: [unique, not_null]
+      - name: account_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_accounts')
+                field: account_id
+
+  - name: stg_merchants
+    columns:
+      - name: merchant_id
+        tests: [unique, not_null]
+
+  - name: stg_fx_rates
+    columns:
+      - name: rate_to_gbp
+        tests: [not_null]
