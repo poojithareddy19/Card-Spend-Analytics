@@ -1,0 +1,52 @@
+# Environment overrides use CSA__SECTION__KEY, for example CSA__STORES__POSTGRES_URL=...
+# Nothing secret belongs in this file.
+
+paths:
+  data_dir: ./data
+  raw_subdir: raw
+  lake_subdir: lake
+  contracts_dir: ./contracts
+
+generation:
+  default_profile: dev
+  seed: 20260916
+  # The processor upgrades its Avro schema two thirds of the way through the window so that any
+  # consumer reading the full history has to handle both versions in one pass.
+  v2_switch_fraction: 0.66
+
+stores:
+  # Relational serving layer. Narrow, indexed, latency sensitive. Overridable with CSA_POSTGRES_DSN.
+  postgres_dsn: postgresql://postgres:postgres@127.0.0.1:5432/card_spend
+  # Columnar analytical layer over the Parquet lake. Embedded, so no server and no connection string.
+  duckdb_path: ./data/warehouse.duckdb
+  # Key-value document store holding the nested customer document, for the single-key deep read.
+  # Overridable with CSA_REDIS_URL.
+  redis_url: redis://127.0.0.1:6379/0
+
+benchmark:
+  profile: bench
+  repeats: 5
+  warmup: 1
+  # Wall-clock budgets in milliseconds, asserted by tests/performance at bench scale.
+  #
+  # Calibrated from the published 54M-row run in docs/benchmarks/, with roughly 30% headroom, on the
+  # reference machine: 2 cores, 7 GB RAM. They are a regression gate, not an aspiration. A budget
+  # invented rather than measured either never fires or fires constantly, and either way stops being
+  # read. Re-calibrate on your own hardware and say so in the pull request.
+  budgets_ms:
+    # measured on the 54M run: redis 0.5 ms
+    q1_customer_profile_lookup: 25
+    # postgres pre-aggregate, 0.7 ms at dev scale; not loadable at 54M on the reference machine
+    q2_customer_12m_spend_by_category: 150
+    # duckdb over the lake, measured 11,282 ms
+    q3_category_month_spend_all_customers: 15000
+    # duckdb over the lake, measured 17,200 ms
+    q4_top_merchants_per_segment: 22000
+    # duckdb over the lake, measured 8,566 ms
+    q5_asof_fx_revaluation: 12000
+
+governance:
+  classification:
+    personal: [profile.first_name, profile.last_name, profile.email, profile.phone, address.line1, address.line2, address.postcode]
+    sensitive: [profile.date_of_birth]
+  mask_unless_role: data_admin
